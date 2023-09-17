@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 
 import java.util.List;
 import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,8 +14,11 @@ import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import uk.co.gamma.address.configuration.AddressFilterConfiguration;
 import uk.co.gamma.address.exception.AddressNotFoundException;
 import uk.co.gamma.address.model.Address;
+import uk.co.gamma.address.model.Zone;
 import uk.co.gamma.address.service.AddressService;
 import uk.co.gamma.address.service.BlackListService;
 
@@ -26,6 +30,9 @@ class AddressControllerTests {
 
     @Mock
     private BlackListService blackListService;
+    
+    @Mock
+    private AddressFilterConfiguration addressFilterConfiguration;
 
     @InjectMocks
     private AddressController addressController;
@@ -67,6 +74,8 @@ class AddressControllerTests {
         );
 
         given(addressService.getByPostcode("RG14 5BY")).willReturn(expected);
+        
+        given(addressFilterConfiguration.isAddressFilterEnabled()).willReturn(true);
 
         List<Address> actual = addressController.list("RG14 5BY");
 
@@ -127,5 +136,22 @@ class AddressControllerTests {
         addressController.delete(1);
 
         BDDMockito.then(addressService).should().delete(1);
+    }
+    
+    @DisplayName("list(postcode) - Given addresses are present with blacklisted postcode, then matching address shall be returned")
+    @Test
+    void list_when_blacklistedPostcode_then_emptyListReturned() throws Exception {
+        // Mock the behavior of the AddressService to return matching addresses
+        List<Address> matchingAddresses = List.of(
+        		new Address(1, "King's House", "Kings Road West", "Newbury", "RG14 7DH")
+        		);
+        given(addressService.getByPostcode("RG14 7DH")).willReturn(matchingAddresses);
+        
+        // Enable address filtering via configuration
+        given(addressFilterConfiguration.isAddressFilterEnabled()).willReturn(true);
+        
+        List<Address> actual = addressController.list("RG14 7DH");
+
+        then(actual).containsExactlyElementsOf(matchingAddresses);
     }
 }

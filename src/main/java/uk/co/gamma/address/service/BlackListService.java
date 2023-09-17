@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import uk.co.gamma.address.model.Address;
 import uk.co.gamma.address.model.Zone;
@@ -43,6 +44,7 @@ public class BlackListService {
      *
      * @return List of  {@link Zone}. Not @Null
      */
+    @Retryable
     public List<Zone> getAll() throws IOException, InterruptedException {
         //INTENTIONAL error simulation DO NOT CHANGE.
         final int randomInt = random.nextInt(9);
